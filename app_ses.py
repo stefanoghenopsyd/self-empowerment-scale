@@ -15,11 +15,11 @@ def main():
     st.set_page_config(page_title="Self-Empowerment Assessment", layout="centered")
 
     # 1. INSERIMENTO LOGO
-    # Assicurati di avere un file chiamato 'logo_genera.png' nella stessa cartella
+    # Assicurati di avere un file chiamato 'GENERA Logo Colore.png' nella stessa cartella
     try:
-        st.image("logo_genera.png", width=200) 
+        st.image("GENERA Logo Colore.png", width=200) 
     except:
-        st.warning("Logo 'logo_genera.png' non trovato. Carica il file nella directory dell'app.")
+        st.warning("Logo 'GENERA Logo Colore.png' non trovato. Carica il file nella directory dell'app.")
 
     st.title("Valutazione del Livello di Self-Empowerment")
 
