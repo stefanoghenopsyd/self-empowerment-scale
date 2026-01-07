@@ -3,8 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
 
-# Tenta di importare la connessione a GSheets. 
-# Se non è configurata (es. in locale senza secrets), gestisce l'errore gentilmente.
+# Tenta di importare la connessione a GSheets
 try:
     from streamlit_gsheets import GSheetsConnection
     HAS_GSHEETS = True
@@ -12,18 +11,23 @@ except ImportError:
     HAS_GSHEETS = False
 
 def main():
-    st.set_page_config(page_title="Self-Empowerment Assessment", layout="centered")
+    st.set_page_config(page_title="Valutazione Self-Empowerment", layout="centered")
 
-    # 1. INSERIMENTO LOGO
-    # Assicurati di avere un file chiamato 'GENERA Logo Colore.png' nella stessa cartella
+    # --- MODIFICA LOGO: CENTRATO E PIÙ GRANDE ---
     try:
-        st.image("GENERA Logo Colore.png", width=200) 
+        # Creiamo 3 colonne: spazio vuoto (1), logo (3), spazio vuoto (1)
+        col_left, col_center, col_right = st.columns([1, 3, 1])
+        
+        with col_center:
+            # width=450 aumenta la dimensione (prima era 200)
+            st.image("logo_genera.png", width=450) 
     except:
-        st.warning("Logo 'GENERA Logo Colore.png' non trovato. Carica il file nella directory dell'app.")
+        st.warning("Logo 'logo_genera.png' non trovato. Carica il file nella directory dell'app.")
+    # ---------------------------------------------
 
     st.title("Valutazione del Livello di Self-Empowerment")
 
-    # 2. INTRODUZIONE TEORICA (Bruscaglioni & Gheno)
+    # INTRODUZIONE TEORICA
     with st.expander("Cos'è il Self-Empowerment? (Introduzione Teorica)", expanded=True):
         st.markdown("""
         Il concetto di **Self-Empowerment**, nel modello teorico elaborato da **Massimo Bruscaglioni** e sviluppato con **Stefano Gheno**, non si riferisce al semplice "potere su" (dominio), ma al **"potere di"**: la capacità di aprire nuove possibilità e di sentirsi protagonisti della propria vita.
@@ -40,7 +44,7 @@ def main():
 
     st.write("---")
 
-    # 3. SEZIONE SOCIO-ANAGRAFICA
+    # SEZIONE SOCIO-ANAGRAFICA
     st.subheader("Dati Socio-Anagrafici")
     st.markdown("Prima di iniziare, ti chiediamo alcune informazioni statistiche.")
     
@@ -86,10 +90,9 @@ def main():
     }
     options_list = list(options_map.keys())
     
-    # Form unico
     with st.form("ses_questionnaire"):
         scores = []
-        answers_log = {} # Per salvare le risposte testuali
+        answers_log = {}
         
         for q in questions:
             st.markdown(f"**{q['text']}**")
@@ -110,47 +113,32 @@ def main():
         submitted = st.form_submit_button("Calcola Risultati e Salva")
 
     if submitted:
-        # Controllo validità anagrafica
         if genere == "Seleziona..." or eta == "Seleziona...":
             st.error("Per favore, compila i campi Genere ed Età prima di calcolare i risultati.")
         else:
-            # Calcolo
             average_score = sum(scores) / len(scores)
             
-            # --- 4. LOGICA DI SALVATAGGIO ---
-            save_success = False
+            # SALVATAGGIO DATI
             if HAS_GSHEETS:
                 try:
-                    # Creiamo il record da salvare
                     record = {
                         "Data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "Genere": genere,
                         "Età": eta,
                         "Punteggio_Medio": average_score,
-                        **answers_log # Aggiunge tutte le risposte Q1, Q2, etc.
+                        **answers_log
                     }
-                    
-                    # Connessione
                     conn = st.connection("gsheets", type=GSheetsConnection)
-                    
-                    # Legge i dati esistenti
-                    existing_data = conn.read(ttl=0) # ttl=0 evita la cache vecchia
-                    
-                    # Aggiunge la nuova riga
+                    existing_data = conn.read(ttl=0)
                     updated_data = pd.concat([existing_data, pd.DataFrame([record])], ignore_index=True)
-                    
-                    # Aggiorna il foglio
                     conn.update(data=updated_data)
-                    save_success = True
                     st.toast("Dati salvati correttamente nel Drive!", icon="✅")
-                    
                 except Exception as e:
-                    # Se fallisce (es. secrets mancanti), non blocchiamo l'utente ma avvisiamo (o nascondiamo l'errore in produzione)
                     st.error(f"Errore nel salvataggio remoto: {e}. Controlla i Secrets.")
             else:
-                st.info("Libreria 'streamlit-gsheets' non installata o configurazione mancante. I dati non sono stati salvati online.")
+                st.info("Salvataggio online non disponibile (libreria mancante).")
 
-            # --- VISUALIZZAZIONE RISULTATI ---
+            # OUTPUT RISULTATI
             st.header("Il tuo Profilo di Self-Empowerment")
             
             if average_score <= 3:
@@ -170,7 +158,6 @@ def main():
             st.markdown(f"**Punteggio:** {average_score:.2f} / 5.00")
             st.info(desc)
 
-            # Grafico
             fig = go.Figure(go.Indicator(
                 mode = "gauge+number",
                 value = average_score,
