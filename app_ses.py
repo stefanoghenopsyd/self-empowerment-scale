@@ -1,21 +1,66 @@
 import streamlit as st
+import pandas as pd
 import plotly.graph_objects as go
+from datetime import datetime
+
+# Tenta di importare la connessione a GSheets. 
+# Se non è configurata (es. in locale senza secrets), gestisce l'errore gentilmente.
+try:
+    from streamlit_gsheets import GSheetsConnection
+    HAS_GSHEETS = True
+except ImportError:
+    HAS_GSHEETS = False
 
 def main():
-    st.set_page_config(page_title="Valutazione Self-Empowerment", layout="centered")
+    st.set_page_config(page_title="Self-Empowerment Assessment", layout="centered")
+
+    # 1. INSERIMENTO LOGO
+    # Assicurati di avere un file chiamato 'logo_genera.png' nella stessa cartella
+    try:
+        st.image("logo_genera.png", width=200) 
+    except:
+        st.warning("Logo 'logo_genera.png' non trovato. Carica il file nella directory dell'app.")
 
     st.title("Valutazione del Livello di Self-Empowerment")
-    st.markdown("""
-    Questo strumento ti permette di autovalutare il tuo livello di **Self-Empowerment**.
-    
-    Rispondi alle seguenti affermazioni indicando quanto sei d'accordo con ciascuna di esse.
-    Non ci sono risposte giuste o sbagliate, cerca di essere il più sincero possibile.
-    """)
+
+    # 2. INTRODUZIONE TEORICA (Bruscaglioni & Gheno)
+    with st.expander("Cos'è il Self-Empowerment? (Introduzione Teorica)", expanded=True):
+        st.markdown("""
+        Il concetto di **Self-Empowerment**, nel modello teorico elaborato da **Massimo Bruscaglioni** e sviluppato con **Stefano Gheno**, non si riferisce al semplice "potere su" (dominio), ma al **"potere di"**: la capacità di aprire nuove possibilità e di sentirsi protagonisti della propria vita.
+        
+        Secondo gli autori (*"Il gusto del potere", 2000*), il processo di self-empowerment si fonda sul passaggio:
+        1.  Dal **Bisogno** (mancanza) al **Desiderio** (aspirazione positiva).
+        2.  Attraverso la **Pensabilità Positiva**: la capacità di vedere risorse dove prima si vedevano solo vincoli.
+        3.  Fino alla **Possibilitazione**: l'apertura concreta di nuove opzioni di scelta.
+        
+        > *"L'empowerment è quel processo che permette di passare da una condizione di passività o di reattività, a una di proattività, in cui il soggetto recupera la propria 'agenzia' e la capacità di incidere sul proprio contesto."*
+        
+        Questo questionario ti aiuta a riflettere su dove ti posizioni oggi rispetto a questa capacità di generare possibilità.
+        """)
 
     st.write("---")
 
-    # Definizione delle domande e della loro tipologia (Standard o Reverse)
-    # Reverse = True significa che "per niente d'accordo" vale 5 invece di 1.
+    # 3. SEZIONE SOCIO-ANAGRAFICA
+    st.subheader("Dati Socio-Anagrafici")
+    st.markdown("Prima di iniziare, ti chiediamo alcune informazioni statistiche.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        genere = st.selectbox(
+            "Genere",
+            ["Seleziona...", "Maschile", "Femminile", "Non binario", "Non risponde"]
+        )
+    with col2:
+        eta = st.selectbox(
+            "Fascia d'età",
+            ["Seleziona...", "Fino a 20 anni", "21-30 anni", "31-40 anni", "41-50 anni", 
+             "51-60 anni", "61-70 anni", "Più di 70 anni"]
+        )
+
+    st.write("---")
+    st.subheader("Questionario")
+
+    # Definizione domande
     questions = [
         {"id": 1,  "text": "1. È meglio concentrarsi sul presente, senza fare troppi progetti futuri", "reverse": True},
         {"id": 2,  "text": "2. Generalmente sento di avere molta influenza su ciò che mi accade nel lavoro", "reverse": False},
@@ -32,7 +77,6 @@ def main():
         {"id": 13, "text": "13. Generalmente ritengo di avere diverse possibilità tra cui scegliere", "reverse": False},
     ]
 
-    # Opzioni di risposta
     options_map = {
         "per niente d'accordo": 1,
         "poco d'accordo": 2,
@@ -40,92 +84,109 @@ def main():
         "abbastanza d'accordo": 4,
         "totalmente d'accordo": 5
     }
-    
     options_list = list(options_map.keys())
     
-    scores = []
-    
-    # Creazione del form
+    # Form unico
     with st.form("ses_questionnaire"):
+        scores = []
+        answers_log = {} # Per salvare le risposte testuali
+        
         for q in questions:
             st.markdown(f"**{q['text']}**")
-            # Usa una chiave unica per ogni widget
             response = st.radio(
-                f"Seleziona la tua risposta per la domanda {q['id']}:",
-                options_list,
-                index=2, # Default su neutro
-                key=f"q_{q['id']}",
+                f"Risp {q['id']}", 
+                options_list, 
+                index=2, 
+                key=f"q_{q['id']}", 
                 label_visibility="collapsed"
             )
             
-            # Calcolo del punteggio
             raw_score = options_map[response]
-            if q['reverse']:
-                # Se è reverse: 1->5, 2->4, 3->3, 4->2, 5->1
-                # Formula: 6 - raw_score
-                final_score = 6 - raw_score
-            else:
-                final_score = raw_score
-            
+            final_score = 6 - raw_score if q['reverse'] else raw_score
             scores.append(final_score)
+            answers_log[f"Q{q['id']}"] = final_score
             st.markdown("---")
         
-        submitted = st.form_submit_button("Calcola Risultato")
+        submitted = st.form_submit_button("Calcola Risultati e Salva")
 
     if submitted:
-        # Calcolo della media
-        total_score = sum(scores)
-        average_score = total_score / len(scores)
-
-        st.header("Il tuo Risultato")
-        
-        # Feedback Narrativo
-        result_level = ""
-        result_color = ""
-        
-        if average_score <= 3:
-            result_level = "BASSO"
-            result_color = "red"
-            description = "Il punteggio indica una percezione limitata delle proprie possibilità di influenza e scelta nel contesto lavorativo/personale."
-        elif average_score <= 4:
-            result_level = "MEDIO"
-            result_color = "orange"
-            description = "Il punteggio indica un livello intermedio di self-empowerment, con un equilibrio tra percezione di vincoli e possibilità."
+        # Controllo validità anagrafica
+        if genere == "Seleziona..." or eta == "Seleziona...":
+            st.error("Per favore, compila i campi Genere ed Età prima di calcolare i risultati.")
         else:
-            result_level = "ALTO"
-            result_color = "green"
-            description = "Il punteggio indica un'ottima percezione delle proprie risorse, un senso di agenzia forte e una visione aperta verso il futuro."
+            # Calcolo
+            average_score = sum(scores) / len(scores)
+            
+            # --- 4. LOGICA DI SALVATAGGIO ---
+            save_success = False
+            if HAS_GSHEETS:
+                try:
+                    # Creiamo il record da salvare
+                    record = {
+                        "Data": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "Genere": genere,
+                        "Età": eta,
+                        "Punteggio_Medio": average_score,
+                        **answers_log # Aggiunge tutte le risposte Q1, Q2, etc.
+                    }
+                    
+                    # Connessione
+                    conn = st.connection("gsheets", type=GSheetsConnection)
+                    
+                    # Legge i dati esistenti
+                    existing_data = conn.read(ttl=0) # ttl=0 evita la cache vecchia
+                    
+                    # Aggiunge la nuova riga
+                    updated_data = pd.concat([existing_data, pd.DataFrame([record])], ignore_index=True)
+                    
+                    # Aggiorna il foglio
+                    conn.update(data=updated_data)
+                    save_success = True
+                    st.toast("Dati salvati correttamente nel Drive!", icon="✅")
+                    
+                except Exception as e:
+                    # Se fallisce (es. secrets mancanti), non blocchiamo l'utente ma avvisiamo (o nascondiamo l'errore in produzione)
+                    st.error(f"Errore nel salvataggio remoto: {e}. Controlla i Secrets.")
+            else:
+                st.info("Libreria 'streamlit-gsheets' non installata o configurazione mancante. I dati non sono stati salvati online.")
 
-        st.markdown(f"### Livello di Self-Empowerment: :{result_color}[{result_level}]")
-        st.markdown(f"**Punteggio medio:** {average_score:.2f} / 5.00")
-        st.info(description)
+            # --- VISUALIZZAZIONE RISULTATI ---
+            st.header("Il tuo Profilo di Self-Empowerment")
+            
+            if average_score <= 3:
+                result_level = "BASSO"
+                result_color = "red"
+                desc = "Percezione limitata delle possibilità di influenza. Focus prevalente sui vincoli."
+            elif average_score <= 4:
+                result_level = "MEDIO"
+                result_color = "orange"
+                desc = "Livello intermedio. Equilibrio tra percezione di vincoli e risorse."
+            else:
+                result_level = "ALTO"
+                result_color = "green"
+                desc = "Ottima percezione delle risorse e forte senso di agenzia (agency)."
 
-        # Feedback Grafico (Gauge Chart)
-        fig = go.Figure(go.Indicator(
-            mode = "gauge+number",
-            value = average_score,
-            domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': "Punteggio SES"},
-            gauge = {
-                'axis': {'range': [1, 5], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                'bar': {'color': result_color},
-                'bgcolor': "white",
-                'borderwidth': 2,
-                'bordercolor': "gray",
-                'steps': [
-                    {'range': [1, 3], 'color': '#ffcccc'},  # Rosso chiaro
-                    {'range': [3, 4], 'color': '#ffedcc'},  # Arancio chiaro
-                    {'range': [4, 5], 'color': '#ccffcc'}   # Verde chiaro
-                ],
-                'threshold': {
-                    'line': {'color': "black", 'width': 4},
-                    'thickness': 0.75,
-                    'value': average_score
+            st.markdown(f"### Livello: :{result_color}[{result_level}]")
+            st.markdown(f"**Punteggio:** {average_score:.2f} / 5.00")
+            st.info(desc)
+
+            # Grafico
+            fig = go.Figure(go.Indicator(
+                mode = "gauge+number",
+                value = average_score,
+                domain = {'x': [0, 1], 'y': [0, 1]},
+                gauge = {
+                    'axis': {'range': [1, 5]},
+                    'bar': {'color': result_color},
+                    'steps': [
+                        {'range': [1, 3], 'color': '#ffcccc'},
+                        {'range': [3, 4], 'color': '#ffedcc'},
+                        {'range': [4, 5], 'color': '#ccffcc'}
+                    ],
+                    'threshold': {'line': {'color': "black", 'width': 4}, 'thickness': 0.75, 'value': average_score}
                 }
-            }
-        ))
-        
-        st.plotly_chart(fig)
+            ))
+            st.plotly_chart(fig)
 
 if __name__ == "__main__":
     main()
