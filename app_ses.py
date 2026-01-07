@@ -19,27 +19,25 @@ def main():
         col_left, col_center, col_right = st.columns([1, 3, 1])
         
         with col_center:
-            # width=450 aumenta la dimensione (prima era 200)
+            # width=600 aumenta la dimensione (prima era 200)
             st.image("logo_genera.png", width=450) 
     except:
         st.warning("Logo 'logo_genera.png' non trovato. Carica il file nella directory dell'app.")
     # ---------------------------------------------
 
-    st.title("Valutazione del Livello di Self-Empowerment")
+    st.title("Self-Empowerment Assessment")
 
     # INTRODUZIONE TEORICA
-    with st.expander("Cos'è il Self-Empowerment? (Introduzione Teorica)", expanded=True):
+    with st.expander("Cos'è il Self-Empowerment?", expanded=True):
         st.markdown("""
-        Il concetto di **Self-Empowerment**, nel modello teorico elaborato da **Massimo Bruscaglioni** e sviluppato con **Stefano Gheno**, non si riferisce al semplice "potere su" (dominio), ma al **"potere di"**: la capacità di aprire nuove possibilità e di sentirsi protagonisti della propria vita.
-        
+        Il concetto di **Self-Empowerment**, nel modello teorico elaborato da **Massimo Bruscaglioni** e successivamente sviluppato con **Stefano Gheno**, non si riferisce al semplice "potere su" (dominio), ma al **"potere di"**: la capacità di aprire nuove possibilità e di sentirsi protagonisti della propria vita.
         Secondo gli autori (*"Il gusto del potere", 2000*), il processo di self-empowerment si fonda sul passaggio:
         1.  Dal **Bisogno** (mancanza) al **Desiderio** (aspirazione positiva).
         2.  Attraverso la **Pensabilità Positiva**: la capacità di vedere risorse dove prima si vedevano solo vincoli.
         3.  Fino alla **Possibilitazione**: l'apertura concreta di nuove opzioni di scelta.
-        
         > *"L'empowerment è quel processo che permette di passare da una condizione di passività o di reattività, a una di proattività, in cui il soggetto recupera la propria 'agenzia' e la capacità di incidere sul proprio contesto."*
         
-        Questo questionario ti aiuta a riflettere su dove ti posizioni oggi rispetto a questa capacità di generare possibilità.
+        Questo questionario ti aiuta a riflettere su dove ti posizioni oggi rispetto a questa capacità di generare possibilità. Troverai 13 affermazioni, indica il tuo grado di accordo con ciascuna di esse su una scala che va da 1 (per nulla d'accordo) a 5 (totalmente d'accordo). Il test è del tutto anonimo e ti fornira un feedback immediato circa il tuo livello di Self-empowerment.
         """)
 
     st.write("---")
