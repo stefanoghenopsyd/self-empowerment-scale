@@ -37,7 +37,7 @@ def main():
         3.  Fino alla **Possibilitazione**: l'apertura concreta di nuove opzioni di scelta.
         > *"L'empowerment è quel processo che permette di passare da una condizione di passività o di reattività, a una di proattività, in cui il soggetto recupera la propria 'agenzia' e la capacità di incidere sul proprio contesto."*
         
-        Questo questionario ti aiuta a riflettere su dove ti posizioni oggi rispetto a questa capacità di generare possibilità. Troverai 13 affermazioni, indica il tuo grado di accordo con ciascuna di esse su una scala che va da 1 (per nulla d'accordo) a 5 (totalmente d'accordo). Il test è del tutto anonimo e ti fornira un feedback immediato circa il tuo livello di Self-empowerment.
+        Questo questionario ti aiuta a riflettere su dove ti posizioni oggi rispetto a questa capacità di generare possibilità. Troverai 13 affermazioni, indica il tuo grado di accordo con ciascuna di esse su una scala che va da 1 (per nulla d'accordo) a 5 (totalmente d'accordo). Il test è del tutto anonimo e ti fornirà un feedback immediato circa il tuo livello di Self-empowerment.
         """)
 
     st.write("---")
