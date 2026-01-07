@@ -11,7 +11,7 @@ except ImportError:
     HAS_GSHEETS = False
 
 def main():
-    st.set_page_config(page_title="Valutazione Self-Empowerment", layout="centered")
+    st.set_page_config(page_title="Self-empowerment Assessment", layout="centered")
 
     # --- MODIFICA LOGO: CENTRATO E PIÙ GRANDE ---
     try:
@@ -20,9 +20,9 @@ def main():
         
         with col_center:
             # width=600 aumenta la dimensione (prima era 200)
-            st.image("logo_genera.png", width=450) 
+            st.image("GENERA Logo Colore.png", width=450) 
     except:
-        st.warning("Logo 'logo_genera.png' non trovato. Carica il file nella directory dell'app.")
+        st.warning("Logo 'GENERA Logo Colore.png' non trovato. Carica il file nella directory dell'app.")
     # ---------------------------------------------
 
     st.title("Self-Empowerment Assessment")
